@@ -15,8 +15,9 @@ import java.util.logging.Logger;
 
 import javax.inject.Inject;
 
-import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.terminal.POSIXTerminal;
+import org.jboss.aesh.terminal.Terminal;
 
 /**
  * Holds a shell instance (no need for proxies)
@@ -32,13 +33,19 @@ public class ShellHandle
 
    public void initialize(File currentResource, InputStream stdIn, PrintStream stdOut, PrintStream stdErr)
    {
-      Settings settings = new SettingsBuilder()
+	  Terminal terminal = null; 
+	  if ("true".equals(System.getProperty("org.jboss.forge.addon.shell.forcePOSIXTerminal"))) {
+		  terminal = new POSIXTerminal();
+	  }
+	  SettingsBuilder settingsBuilder = new SettingsBuilder()
                .inputStream(stdIn)
                .outputStream(stdOut)
                .outputStreamError(stdErr)
-               .enableMan(true)
-               .create();
-      this.shell = shellFactory.createShell(currentResource, settings);
+               .enableMan(true);
+      if (terminal != null) {
+    	  settingsBuilder.terminal(terminal);
+      }
+      this.shell = shellFactory.createShell(currentResource, settingsBuilder.create());
    }
 
    public void destroy()
